@@ -101,6 +101,9 @@ function parentFunction(jsondata) {
         console.log(d);
         d.children = d.children ? null : d._children;
         update(d);
+      })
+      .on("click", (d) => {
+        console.log(d);
       });
 
     nodeEnter
