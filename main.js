@@ -110,7 +110,7 @@ function parentFunction(jsondata) {
       })
       .on("mouseup", function (d) {
         endTime = new Date();
-        if (endTime - startTime > 100) {
+        if (endTime - startTime > 500) {
           console.log(
             "long click, " + (endTime - startTime) + " milliseconds long"
           );
@@ -211,7 +211,8 @@ function parentFunction(jsondata) {
   root.descendants().forEach((d, i) => {
     d.id = i;
     d._children = d.children;
-    if (d.depth && d.data.Name.length >= 2) d.children = d._children;
+    // console.log(d._÷children.length);
+    if (d.depth && d._children && d._children.length < 2) d.children = null;
   });
 
   update(root);
