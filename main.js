@@ -105,25 +105,37 @@ function parentFunction(jsondata) {
         d.children = d.children ? null : d._children;
         update(d);
       })
-      .on("click", (d) => {
-        console.log(d);
-        let banner = document.getElementById("dataBanner");
-        let string = "<ul>";
-        string = string + "<li>Name: " + d.data.Name + "</li>";
-        if (d.data["Spouse Name"])
-          string =
-            string + "<li>Spouse Name: " + d.data["Spouse Name"] + "</li>";
-        if (d.data["Occupation"])
-          string = string + "<li>Occupation: " + d.data["Occupation"] + "</li>";
-        if (d.data["Stay"])
-          string = string + "<li>Stay: " + d.data["Stay"] + "</li>";
-        if (d.data["Contact No"])
-          string = string + "<li>Contact No: " + d.data["Contact No"] + "</li>";
-        string = string + "</ul>";
-        banner.innerHTML =
-          string +
-          '<button onclick="hideBanner()"><img src="icons8-close-50.png" height="10" width="10"/></button>';
-        banner.style.display = "flex";
+      .on("mousedown", function () {
+        startTime = new Date();
+      })
+      .on("mouseup", function (d) {
+        endTime = new Date();
+        if (endTime - startTime > 100) {
+          console.log(
+            "long click, " + (endTime - startTime) + " milliseconds long"
+          );
+
+          console.log(d);
+          let banner = document.getElementById("dataBanner");
+          let string = "<ul>";
+          string = string + "<li>Name: " + d.data.Name + "</li>";
+          if (d.data["Spouse Name"])
+            string =
+              string + "<li>Spouse Name: " + d.data["Spouse Name"] + "</li>";
+          if (d.data["Occupation"])
+            string =
+              string + "<li>Occupation: " + d.data["Occupation"] + "</li>";
+          if (d.data["Stay"])
+            string = string + "<li>Stay: " + d.data["Stay"] + "</li>";
+          if (d.data["Contact No"])
+            string =
+              string + "<li>Contact No: " + d.data["Contact No"] + "</li>";
+          string = string + "</ul>";
+          banner.innerHTML =
+            string +
+            '<button onclick="hideBanner()"><img src="icons8-close-50.png" height="10" width="10"/></button>';
+          banner.style.display = "flex";
+        }
       });
 
     nodeEnter
@@ -199,7 +211,7 @@ function parentFunction(jsondata) {
   root.descendants().forEach((d, i) => {
     d.id = i;
     d._children = d.children;
-    // if (d.depth && d.data.Name.length !== 7) d.children = d._children;
+    if (d.depth && d.data.Name.length >= 2) d.children = d._children;
   });
 
   update(root);
