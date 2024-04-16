@@ -23,7 +23,7 @@ function parentFunction(jsondata) {
     .stratify()
     .id((d) => d.Name)
     .parentId((d) => d.Father)(jsondata);
-  const dx = 50;
+  const dx = 20;
   const dy = (width - marginRight - marginLeft) / (1 + root.height);
   const tree = d3.tree().nodeSize([dx, dy]);
   const diagonal = d3
@@ -179,7 +179,7 @@ function parentFunction(jsondata) {
   root.descendants().forEach((d, i) => {
     d.id = i;
     d._children = d.children;
-    if (d.depth && d.data.Name.length !== 7) d.children = null;
+    // if (d.depth && d.data.Name.length !== 7) d.children = d._children;
   });
 
   update(root);
