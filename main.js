@@ -7,6 +7,9 @@ fetch("./treedata.json")
     parentFunction(data);
   });
 
+function hideBanner() {
+  document.getElementById("dataBanner").style.display = "none";
+}
 function parentFunction(jsondata) {
   const width = window.innerWidth;
   const marginTop = 30;
@@ -104,6 +107,23 @@ function parentFunction(jsondata) {
       })
       .on("click", (d) => {
         console.log(d);
+        let banner = document.getElementById("dataBanner");
+        let string = "<ul>";
+        string = string + "<li>Name: " + d.data.Name + "</li>";
+        if (d.data["Spouse Name"])
+          string =
+            string + "<li>Spouse Name: " + d.data["Spouse Name"] + "</li>";
+        if (d.data["Occupation"])
+          string = string + "<li>Occupation: " + d.data["Occupation"] + "</li>";
+        if (d.data["Stay"])
+          string = string + "<li>Stay: " + d.data["Stay"] + "</li>";
+        if (d.data["Contact No"])
+          string = string + "<li>Contact No: " + d.data["Contact No"] + "</li>";
+        string = string + "</ul>";
+        banner.innerHTML =
+          string +
+          '<button onclick="hideBanner()"><img src="icons8-close-50.png" height="10" width="10"/></button>';
+        banner.style.display = "flex";
       });
 
     nodeEnter
