@@ -1,295 +1,186 @@
-
-
-fetch('./treedata.json')
-.then(function(resp){
+fetch("./treedata.json")
+  .then(function (resp) {
     return resp.json();
-})
-.then(function(data){
-    console.log("Test")
-   parentFunction(data);
-});
+  })
+  .then(function (data) {
+    console.log("Test");
+    parentFunction(data);
+  });
 
-function parentFunction(jsondata){
+function parentFunction(jsondata) {
+  const width = window.innerWidth;
+  const marginTop = 30;
+  const marginRight = 10;
+  const marginBottom = 10;
+  const marginLeft = 200;
+  console.log("the data is");
+  console.log(jsondata);
 
+  let mouseX = 0;
+  //these global variables I should later get via closure
+  let buttonTracker = [];
+  let root = d3
+    .stratify()
+    .id((d) => d.Name)
+    .parentId((d) => d.Father)(jsondata);
+  const dx = 50;
+  const dy = (width - marginRight - marginLeft) / (1 + root.height);
+  const tree = d3.tree().nodeSize([dx, dy]);
+  const diagonal = d3
+    .linkHorizontal()
+    .x((d) => d.y)
+    .y((d) => d.x);
 
-console.log("the data is")
-console.log(jsondata)
+  // Create the SVG container, a layer for the links and a layer for the nodes.
+  const svg = d3
+    .create("svg")
+    .attr("width", width)
+    .attr("height", dx)
+    .attr("viewBox", [-marginLeft, -marginTop, width, dx])
+    .attr(
+      "style",
+      "max-width: 100%; height: auto; font: 10px sans-serif; user-select: none;"
+    );
 
+  const gLink = svg
+    .append("g")
+    .attr("fill", "none")
+    .attr("stroke", "#555")
+    .attr("stroke-opacity", 0.4)
+    .attr("stroke-width", 1.5);
 
-let mouseX = 0;
-//these global variables I should later get via closure
-let buttonTracker = [];
-let rootNode = d3.hierarchy(jsondata, d=>d.children);
-var pathLinks = rootNode.links(); 
-var updatePathLinks;
+  const gNode = svg
+    .append("g")
+    .attr("cursor", "pointer")
+    .attr("pointer-events", "all");
 
-var circleLinks = rootNode.descendants();
-var updateCircleLinks;
-
-var textLinks = rootNode.descendants();
-var updateTextLinks;
-
-
-let dim = {
-    'width': window.screen.width, 
-    'height':window.screen.height * 7   , 
-    'margin':50    
-};
-
-let svg = d3.select('#chart').append('svg')
-     .style('background', 'black')   
-     .attrs(dim);
-
-
-document.querySelector("#chart").classList.add("center");
-
-//let rootNode = d3.hierarchy(data);
-
-
-
-
-let g = svg.append('g')
-            .attr('transform', 'translate(140,50)');
-
-    let layout = d3.tree().size([dim.height-50, dim.width-320]);
-
-    layout(rootNode);
-    console.log(rootNode.links());
-    console.log("----------------------");
-    console.log(rootNode.descendants());
-    //console.log(rootNode.descendants());
-   //first lets create a path 
-   let lines = g.selectAll('path');  
-
-
-
-function update(data){
-
-let group =  g.selectAll('path')
-    .data(data, (d,i) => d.target.data.name)
-    .join(
-    function(enter){
-        return enter.append('path')
-                    .attrs({
-                        'd': d3.linkHorizontal()
-                        .x(d => mouseX)
-                         .y(d => d.x),
-                     'fill':'none',
-                     'stroke':'white'
-                    })
-    },
-    function(update){
-        return update;
-    },
-    function(exit){
- 
-
-
-        return exit.call(path => path.transition().duration(300).remove()
-                                                .attr('d', d3.linkHorizontal()
-                                                              .x(d => mouseX)
-                                                              .y(d =>d.x)));
+  function update(source) {
+    const duration = 250;
+    if (!source) {
+      console.log("Collapsing or no child on node", source);
+      return;
     }
+    console.log(source);
 
+    let nodes = root.descendants().reverse();
+    let links = root.links();
 
-)
-.call(path => path.transition().duration(1000).attr('d', d3.linkHorizontal()
-        .x(d => d.y)
-         .y(d => d.x))
-         .attr("id", function(d,i){return "path"+i}));
+    // Compute the new tree layout.
+    tree(root);
 
-
-}
-update(pathLinks); //rootNode.links()
-
-
-
-function updateCircles(data){
-    g.selectAll('circle')
-    .data(data, (d) => d.data.name)
-    .join(
-        function(enter){
-            return enter.append('circle')
-                        .attrs({
-                            'cx':(d)=> mouseX,
-                            'cy':(d) => d.x,
-                            'r':12,
-                            'fill':(d) => {
-                                if(d.children == undefined){
-                                    return 'red'
-                                }
-                                return 'green'
-                            },
-                            'id': (d,i) =>d.data.name,
-                            'class':'sel'                           
-                        })
-        },
-        function(update){
-            return update;
-        },
-        function(exit){
-
-            return exit.call(path => path.transition().duration(300).remove()
-            .attrs({
-                'cx':(d) =>mouseX,
-                'r':(d) => 0
-            }));
-
-        }
-
-
-    )
-    .call(circle => circle.transition().duration(1000).attr('cx', (d)=>d.y))
-
-    .on('mouseover', function(d){
-
-       d3.select(this)
-           .attrs({                
-               'fill':'orange',
-
-           })
-           .transition().duration(100).attr('r', 16);
-    })
-    .on('mouseout', function(d){
-       d3.select(this)
-           .attr('fill', (d)=>{
-                if(d.children ==undefined){
-                    return 'red'
-                }
-                return 'green'
-           })
-           .transition().duration(100).attr('r', 12)
-
-    })
-    .on('click', async function(d){
-
-           let buttonId = d3.select(this)["_groups"][0][0]["attributes"].id.value;
-           mouseX = d3.select(this)["_groups"][0][0]["attributes"].cx.value;
-           //check to see if button already exists aka has been clicked
-           //if it does, we need to send that data to update function
-           //and remove that object
-
-           let checkButtonExists = buttonTracker.filter(button => button.buttonId == buttonId);
- 
-           if(checkButtonExists[0]!=undefined){
-                //also remove this item from button tracker
-               buttonTracker = buttonTracker.filter(button => button.buttonId != buttonId);
-               
-               //handle path update
-               pathLinks = checkButtonExists[0].buttonPathData.concat(pathLinks);
-                              
-               update(pathLinks);
-
-
-                //handle  circle update
-               circleLinks = checkButtonExists[0].buttonCircleData.concat(circleLinks);
-                 updateCircles(circleLinks);
-
-                 //handle text update
-
-                textLinks =checkButtonExists[0].buttonTextData.concat(textLinks);
-                updateText(textLinks);
-
-                return;
-
-           }
-
-           var valueArray = await processedlinks(d.links());   
-
-           updatePathLinks = pathLinks.filter(function(item){        
-                   return !valueArray.includes(item.target.data.name);                                       
-           });
-
-           //now run the filter to get unfiltered items
-           var clickedPathData = pathLinks.filter(function(item){
-            return valueArray.includes(item.target.data.name);
-            });
-
-
-           updateCircleLinks = circleLinks.filter(function(item){
-                    return !valueArray.includes(item.data.name);
-           });
-
-           var clickedCircleData = circleLinks.filter(function(item){
-                    return valueArray.includes(item.data.name);
-           });
-        
-        
-           updateTextLinks = textLinks.filter(function(item){
-                    return !valueArray.includes(item.data.name);
-           });
-
-           var clickedTextData = textLinks.filter(function(item){
-                    return valueArray.includes(item.data.name);
-           });
-
-           //now we push the circleData to an array
-           buttonTracker.push({
-               buttonId:buttonId,
-               buttonPathData: clickedPathData,
-               buttonCircleData:clickedCircleData,
-               buttonTextData:clickedTextData
-           })
-
-           
-           update(updatePathLinks);
-           updateCircles(updateCircleLinks);
-           updateText(updateTextLinks);
-          async function processedlinks(dlinks) {
-           var valueArray = [];
-    
-               return new Promise((resolve, reject)=>{
-                     dlinks.forEach(async(element) =>{
-                          valueArray.push(element.target.data.name); 
-                     });
-                     resolve(valueArray);      
-               });
-           }
-
-           pathLinks = updatePathLinks;
-           circleLinks = updateCircleLinks;
-           textLinks = updateTextLinks;
-
+    let left = root;
+    let right = root;
+    root.eachBefore((node) => {
+      if (node.x < left.x) left = node;
+      if (node.x > right.x) right = node;
     });
 
+    const height = right.x - left.x + marginTop + marginBottom;
 
-}
+    const transition = svg
+      .transition(0, 0)
+      .duration(duration)
+      .attr("height", height)
+      .attr("viewBox", [-marginLeft, left.x - marginTop, width, height])
+      .tween(
+        "resize",
+        window.ResizeObserver ? null : () => () => svg.dispatch("toggle")
+      );
 
-updateCircles(rootNode.descendants());
- 
+    // Update the nodes…
+    const node = gNode.selectAll("g").data(nodes, (d) => d.id);
 
-function updateText(data){
+    // Enter any new nodes at the parent's previous position.
+    const nodeEnter = node
+      .enter()
+      .append("g")
+      .attr("transform", (source) => `translate(${source.y0},${source.x0})`)
+      .attr("fill-opacity", 0)
+      .attr("stroke-opacity", 0)
+      .on("dblclick", (d) => {
+        console.log(d);
+        d.children = d.children ? null : d._children;
+        update(d);
+      });
 
-    g.selectAll('text')
-      .data(data, (d) =>d.data.name)
-      .join(
-        function(enter){
-            return enter.append('text')
-                        .attrs({
-                            'x': (d) =>mouseX,
-                            'y':(d) => d.x,
-                            'font-size':0
-                        })
-                        .text((d) => d.data.name);
-        },
-        function(update){
-            return update;
-        },
-        function(exit){
-                return exit.call(text => text.transition().duration(300).remove().attrs({
-                       'x':(d) => mouseX,
-                       'font-size':0 
-                }));   
-        }
+    nodeEnter
+      .append("circle")
+      .attr("r", 2.5)
+      .attr("fill", (d) => (d._children ? "#555" : "#999"))
+      .attr("stroke-width", 10);
 
-      )
-      .call(text => text.transition().duration(1000).attrs({
-          'x':(d) =>d.y+20,
-          'font-size':15,
-          'fill':'yellow',
-        }));
-}
+    nodeEnter
+      .append("text")
+      .attr("x", "5vw")
+      .attr("dy", "-1em")
+      .attr("text-anchor", "end")
+      .text((d) => d.data.Name)
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-width", 0.1)
+      .attr("stroke", "black")
+      .attr("paint-order", "stroke");
 
-updateText(textLinks);
+    // Transition nodes to their new position.
+    const nodeUpdate = node
+      .merge(nodeEnter)
+      .transition(transition)
+      .attr("transform", (d) => `translate(${d.y},${d.x})`)
+      .attr("fill-opacity", 1)
+      .attr("stroke-opacity", 1);
 
+    // Transition exiting nodes to the parent's new position.
+    const nodeExit = node
+      .exit()
+      .transition(transition)
+      .remove()
+      .attr("transform", (d) => `translate(${source.y},${source.x})`)
+      .attr("fill-opacity", 0)
+      .attr("stroke-opacity", 0);
+
+    // Update the links…
+    const link = gLink.selectAll("path").data(links, (d) => d.target.id);
+
+    // Enter any new links at the parent's previous position.
+    const linkEnter = link
+      .enter()
+      .append("path")
+      .attr("d", (d) => {
+        const o = { x: source.x0, y: source.y0 };
+        return diagonal({ source: o, target: o });
+      });
+
+    // Transition links to their new position.
+    link.merge(linkEnter).transition(transition).attr("d", diagonal);
+
+    // Transition exiting nodes to the parent's new position.
+    link
+      .exit()
+      .transition(transition)
+      .remove()
+      .attr("d", (d) => {
+        const o = { x: source.x, y: source.y };
+        return diagonal({ source: o, target: o });
+      });
+
+    // Stash the old positions for transition.
+    root.eachBefore((d) => {
+      d.x0 = d.x;
+      d.y0 = d.y;
+    });
+  }
+
+  // Do the first update to the initial configuration of the tree — where a number of nodes
+  // are open (arbitrarily selected as the root, plus nodes with 7 letters).
+  root.x0 = dy / 2;
+  root.y0 = 0;
+  root.descendants().forEach((d, i) => {
+    d.id = i;
+    d._children = d.children;
+    if (d.depth && d.data.Name.length !== 7) d.children = null;
+  });
+
+  update(root);
+
+  document.getElementById("chart").append(svg.node());
+  //   return svg.node();
 }
