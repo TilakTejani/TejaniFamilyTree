@@ -110,15 +110,24 @@ function parentFunction(jsondata) {
       })
       .on("mouseup", function (d) {
         endTime = new Date();
-        if (endTime - startTime > 500) {
+        if (endTime - startTime > 200) {
           console.log(
             "long click, " + (endTime - startTime) + " milliseconds long"
           );
 
           console.log(d);
           let banner = document.getElementById("dataBanner");
-          let string = "<ul>";
+          let image = d.data["Image"] ? d.data["Image"] : "./unknown_image.png";
+          let spouseImage = d.data["Spouse Image"]
+            ? d.data["Spouse Image"]
+            : "./unknown_image.png";
+          let string = "<div>";
+          string = string + "<div ><img id='bannerPhoto' src='" + image + "'/>";
+          string =
+            string + "<img id='bannerPhoto'src='" + spouseImage + "'/></div>";
+          string = string + "<ul>";
           string = string + "<li>Name: " + d.data.Name + "</li>";
+
           if (d.data["Spouse Name"])
             string =
               string + "<li>Spouse Name: " + d.data["Spouse Name"] + "</li>";
@@ -134,6 +143,7 @@ function parentFunction(jsondata) {
           banner.innerHTML =
             string +
             '<button onclick="hideBanner()"><img src="icons8-close-50.png" height="10" width="10"/></button>';
+
           banner.style.display = "flex";
         }
       });
@@ -141,15 +151,27 @@ function parentFunction(jsondata) {
     nodeEnter
       .append("circle")
       .attr("r", 2.5)
-      .attr("fill", (d) => (d._children ? "#555" : "#999"))
-      .attr("stroke-width", 10);
+      .attr("fill", (d) => (d._children ? "#888" : "white"))
+      .attr("stroke", "black")
+      // .attr("fill", (d) => (d._children ? "#555" : "#999"))
+      .attr("stroke-width", 1);
+
+    nodeEnter
+      .append("image")
+      .attr("xlink:href", (d) =>
+        d.data.Image ? d.data.Image : "./unknown_image.png"
+      )
+      .attr("x", -25) // Adjust x position as needed
+      .attr("y", -20) // Adjust y position as needed
+      .attr("height", 20) // Set the height of the image
+      .attr("width", 20); // Set the width of the image
 
     nodeEnter
       .append("text")
-      .attr("x", "5vw")
-      .attr("dy", "-1em")
-      .attr("text-anchor", "end")
       .text((d) => d.data.Name)
+      // .attr("x", -5)
+      .attr("dy", "-0.5em")
+      .attr("text-anchor", "start")
       .attr("stroke-linejoin", "round")
       .attr("stroke-width", 0.1)
       .attr("stroke", "black")
