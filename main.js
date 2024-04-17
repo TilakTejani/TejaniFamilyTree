@@ -11,7 +11,7 @@ function hideBanner() {
   document.getElementById("dataBanner").style.display = "none";
 }
 function parentFunction(jsondata) {
-  const width = window.innerWidth;
+  const width = 1400;
   const marginTop = 30;
   const marginRight = 10;
   const marginBottom = 10;
